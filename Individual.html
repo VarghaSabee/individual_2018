@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Оцінювання інвестиційного проекту на основі нечітких булевих функцій</title>
+	<link rel="icon" href="https://static.thenounproject.com/png/131891-200.png">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font: 15px/1.3 'Open Sans', sans-serif;
+            color: #5e5b64;
+        }
+
+        h2 {
+            text-align: center;
+        }
+        .table-striped>tbody>tr:nth-child(odd)>td, 
+        .table-striped>tbody>tr:nth-child(odd)>th {
+        }
+        .iname{
+            max-width: 350px;
+        }
+        .inpname{
+            min-width: 400px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+
+
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12">
+                    <h2>Оцінювання інвестиційного проекту на основі нечітких булевих функцій</h2>
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Терм-множина</th>
+                                <th>Ступінь ризику</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr  v-for="(item, index) in calcMnyu">
+                                <td>G<sub>{{ index +1 }}</sub></td>
+                                <td>{{ item.name }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h2>База знань</h2>
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Критерій</th>
+                                <th colspan="5" style="text-align: center">Терм</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td></td>
+                                <td><b>B<sub>i1</sub></b></td>
+                                <td><b>B<sub>i2</sub></b></td>
+                                <td><b>B<sub>i3</sub></b></td>
+                                <td><b>B<sub>i4</sub></b></td>
+                                <td><b>B<sub>i5</sub></b></td>
+                            </tr>
+                            <tr v-for="(item, index) in BaseData">
+                                <td>K<sub>{{ index+1 }}</sub></td>
+                                <td>( {{ item.B[0].join(',') }} )</td>
+                                <td>( {{ item.B[1].join(',') }} )</td>
+                                <td>( {{ item.B[2].join(',') }} )</td>
+                                <td>( {{ item.B[3].join(',') }} )</td>
+                                <td>( {{ item.B[4].join(',') }} )</td>
+                            </tr>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="row">
+
+                <div class="col-md-12">
+                    <h2>Приклад</h2>
+                    <hr>
+                    <form class="form-inline" action="/">
+                        <div class="form-group">
+                            <label>Назва:</label>
+                            <input type="text" class="form-control inpname" placeholder="Назва" v-model="name">
+                        </div>
+                        <div class="form-group">
+                            <label>Значення:</label>
+                            <input type="text" class="form-control" placeholder="Enter &micro;" v-model="value">
+                        </div>
+
+                        <button type="button" class="btn btn-success" @click="addData">Add</button>
+                        <button type="button" class="btn btn-danger" @click="removeall">Remove all</button>
+                    </form>
+                    <hr>
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th colspan="3">Значення показника</th>
+                                <th>Рівень показника</th>
+                                <th>Значення ф-ї належності</th>
+                                <th>Дії</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="(item, index) in InData">
+                                <td class="align-middle">K<sub>{{ index +1}}</sub></td>
+                                <td class="align-middle iname">{{ item.name }}</td>
+                                <td class="align-middle">{{ item.value }}</td>
+                                <td class="align-middle">
+                                    <span>B<sub>{{ item.B[0].i}}</sub><sub>{{item.B[0].j}}</sub> ( {{
+                                        item.B[0].values.join(',') }} )</span> <br>
+                                    <span>B<sub>{{ item.B[1].i}}</sub><sub>{{item.B[1].j}}</sub> ( {{
+                                        item.B[1].values.join(',') }} )</span>
+                                </td>
+                                <td class="align-middle"><span>&micro;<sub>{{ item.B[0].i + "" + item.B[0].j }}</sub> =
+                                        {{ calcTrapezoidOne(item.value,item.B[0].values).toFixed(2) }}</span><br>
+                                    <span>&micro;<sub>{{ item.B[1].i + "" + item.B[1].j }}</sub> = {{
+                                        calcTrapezoidTwo(item.value,item.B[1].values).toFixed(2) }}</span></td>
+                                <td class="align-middle">
+                                    <div class="btn-group">
+                                        <button class="btn btn-warning" @click="edit(index)">Edit</button>
+                                        <button class="btn btn-danger" @click="remove(index)">Delete</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+
+                    <h2>Обчислення значень функції належності змінної g</h2>
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Терм p<sub>i</sub> лінгвістичної змінної g</th>
+                                <th>Множина носій і-го терму лінгвістичної змінної g</th>
+                                <th>Середина проміжку G<sub>i</sub>,g<sub>i</sub></th>
+                                <th>g<sub>i</sub></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="(item, index) in Table2Data">
+                                <td class="align-middle">{{ item.p.toFixed(2) }} </td>
+                                <td class="align-middle">G<sub>{{index+1}}</sub> &euro; ({{ item.term.join(',') }}]
+                                </td>
+                                <td class="align-middle"> {{ item.g}}</td>
+                                <td class="align-middle">{{item.G.toFixed(4) }} </td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h2>&sum; g<sub>i</sub> = {{ G.toFixed(2) }}</h2>
+                    <h2>Значення функції належності &micro;<sub>k</sub>(g) для g = {{ G.toFixed(2) }}</h2>
+                    <ol>
+                        <li v-for="item in resultData"><b>&micro;<sub>{{item.index}}</sub> = {{item.mnyu.toFixed(1)}} або {{item.name}}</b></li>
+                    </ol>
+                    <br>
+                    <hr>
+                </div>
+            </div>
+            <!-- end container -->
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.21/vue.js"></script>
+    <script>
+        var demo = new Vue({
+
+            el: '#app',
+            data: {
+                BaseData: [
+                    { B: [[0, 0.1, 0.11, 0.3], [0.11, 0.3, 0.31, 0.5], [0.31, 0.5, 0.51, 0.7], [0.51, 0.7, 0.71, 0.9], [0.71, 0.9, 0.91, 1]] },
+                    { B: [[0, 0.1, 0.11, 0.2], [0.11, 0.2, 0.21, 0.5], [0.21, 0.5, 0.51, 0.7], [0.51, 0.7, 0.71, 0.9], [0.71, 0.9, 0.91, 1]] },
+                    { B: [[0, 1, 1.1, 1.2], [1.1, 1.2, 1.21, 1.4], [1.21, 1.4, 1.41, 2], [1.41, 2, 2.1, 5], [2.1, 5, 5.1, 10]] },
+                    { B: [[0, 0, 0.01, 0.3], [0.01, 0.3, 0.31, 0.5], [0.31, 0.5, 0.51, 0.7], [0.51, 0.7, 0.71, 0.9], [0.71, 0.9, 1, 1]] },
+                    { B: [[0, 0, 0.01, 0.3], [0.01, 0.3, 0.31, 0.5], [0.31, 0.5, 0.51, 0.7], [0.51, 0.7, 0.71, 0.9], [0.71, 0.9, 1, 1]] },
+                    { B: [[0, 0, 0.01, 0.3], [0.01, 0.3, 0.31, 0.6], [0.31, 0.6, 0.61, 0.7], [0.61, 0.7, 0.71, 0.9], [0.71, 0.9, 1, 1]] }
+                ],
+                InData: [
+                    {
+                        name: 'Критерій чистої приведеної вартості проекту', value: 0.72,
+                        B: [
+                            { i: 1, j: 4, values: [0.51, 0.7, 0.71, 0.9] },
+                            { i: 1, j: 5, values: [0.71, 0.9, 0.91, 1] }
+                        ]
+                    },
+                    {
+                        name: 'Коефіцієнт власних засобів', value: 0.55,
+                        B: [
+                            { i: 2, j: 3, values: [0.21, 0.5, 0.51, 0.7] },
+                            { i: 2, j: 4, values: [0.51, 0.7, 0.71, 0.9] }
+                        ]
+                    },
+                    {
+                        name: 'Критерій співвідношення вартості проекту до необхідних запозичених коштів на проект', value: 1.35,
+                        B: [
+                            { i: 3, j: 2, values: [1.1, 1.2, 1.21, 1.4] },
+                            { i: 3, j: 3, values: [1.21, 1.4, 1.41, 2] }
+                        ]
+                    },
+                    {
+                        name: 'Рівень операційних ризиків', value: 0.72,
+                        B: [
+                            { i: 4, j: 4, values: [0.51, 0.7, 0.71, 0.9] },
+                            { i: 4, j: 5, values: [0.71, 0.9, 1, 1] }
+                        ]
+                    },
+                    {
+                        name: 'Маркетингові ризики', value: 0.83,
+                        B: [
+                            { i: 5, j: 4, values: [0.51, 0.7, 0.71, 0.9] },
+                            { i: 5, j: 5, values: [0.71, 0.9, 1, 1] }
+                        ]
+                    },
+                    {
+                        name: 'Проектні ризики', value: 0.55,
+                        B: [
+                            { i: 6, j: 2, values: [0.01, 0.3, 0.31, 0.6] },
+                            { i: 6, j: 3, values: [0.31, 0.6, 0.61, 0.7] }
+                        ]
+                    },
+                ],
+                name: '',
+                value: 0,
+                editing: -1,
+
+                Table2Data: [
+                    { p: 0, term: [0.75, 1], g: 0.875, G: 0 },
+                    { p: 0, term: [0.55, 0.85], g: 0.7, G: 0.049 },
+                    { p: 0, term: [0.35, 0.65], g: 0.5, G: 0.195 },
+                    { p: 0, term: [0.15, 0.45], g: 0.3, G: 0.123 },
+                    { p: 0, term: [0, 0.25], g: 0.125, G: 0.01625 },
+                ],
+                G: 0,
+                calcMnyu: [
+                    {   name:'граничний ризик фінансування інвестиційного проекту',
+                        Y: function (g) { // G1
+                            if (g >= 0.75 && g < 0.85) {
+                                return 1 - 10 * (0.85 - g);
+                            } else {
+                                return 1;
+                            }
+                        }
+                    },
+                    {
+                        name:'ступінь ризику фінансування інвестиційного проекту висока',
+                        Y: function (g) { // G2
+                            if (g > 0.55 && g <= 0.65) {
+                                return 1 - 10 * (0.65 - g);
+                            } else if (g > 0.65 && g <= 0.75) {
+                                return 1;
+                            } else {
+                                return 10 * (0.65 - g);
+                            }
+                        }
+                    },
+                    {
+                        name:'ступінь ризику фінансування інвестиційного проекту середня',
+                        Y: function (g) { // G3
+                            if (g > 0.35 && g <= 0.45) {
+                                return 1 - 10 * (0.45 - g);
+                            } else if (g > 0.45 && g <= 0.55) {
+                                return 1;
+                            } else {
+                                return 10 * (0.65 - g);
+                            }
+                        }
+                    },
+                    {
+                        name:'низька ступінь фінансування інвестиційного проекту банкрутства',
+                        Y: function (g) { // G4
+                            if (g > 0.15 && g <= 0.25) {
+                                return 1 - 10 * (0.25 - g);
+                            } else if (g > 0.25 && g <= 0.35) {
+                                return 1;
+                            } else {
+                                return 10 * (0.45 - g);
+                            }
+                        }
+                    },
+                    {
+                        name:'ризик фінансування інвестиційного проекту незначний',
+                        Y: function (g) { // G5
+                            if (g >= 0 && g <= 0.15) {
+                                return 1;
+                            } else {
+                                return 10 * (0.25 - g);
+                            }
+                        }
+                    }
+
+                ],
+                resultData:[]
+
+            },
+            mounted() {
+                this.calcPi();
+                this.calcG();
+                this.calculateMnyus();
+            },
+            methods: {
+                removeall:function(){
+                    if(confirm("Are you sure remove all data?")){
+                        this.InData = [];
+                    }
+                },
+                remove: function (index) {
+                    if(confirm("Are you sure remove element " + (index +1)+ ". ?")){
+                        this.InData.splice(index, 1);
+                        alert((index + 1) + ". element is successfully removed!");
+                    }
+                },
+                edit: function (index) {
+                    // alert((index + 1) + ". editing!");
+                    this.editing = index;
+
+                    this.name = this.InData[this.editing].name;
+                    this.value = this.InData[this.editing].value;
+
+                },
+                calcTrapezoidOne(value, values) {
+                    return (values[3] - value) / (values[3] - values[2]);
+                },
+                calcTrapezoidTwo(value, values) {
+                    return (value - values[0]) / (values[1] - values[0]);
+                },
+
+                addData: function () {
+
+                    if (this.name.length == 0) {
+                        alert("Name is null!");
+                        return;
+                    }
+
+                    if (this.editing > -1) {
+                        // this.InData[this.editing].name = this.name;
+                        // this.InData[this.editing].value = this.value;
+
+
+                    } else {
+
+                        if (this.InData.length == 6) {
+                            alert("К-ть критерій макс! (6)");
+                            return;
+                        }
+                        this.editing = this.InData.length;
+                    }
+
+                    var obj = {};
+                    obj.name = this.name;
+                    obj.value = this.value;
+
+
+                    var mainloop;
+
+                    mainloop: for (var i = 0; i < this.BaseData[this.editing].B.length; i++) {
+                        for (var j = 0; j < this.BaseData[this.editing].B[i].length; j++) {
+
+                            if (this.BaseData[this.editing].B[i][j] > obj.value) {
+                                obj.B = [
+                                    { i: this.editing + 1, j: i + 1, values: this.BaseData[this.editing].B[i] },
+                                    { i: this.editing + 1, j: i + 2, values: this.BaseData[this.editing].B[i + 1] }
+                                ];
+                                break mainloop;
+                            }
+                        }
+
+
+                    }
+
+                    if (this.editing != this.InData.length) {
+                        this.InData[this.editing] = obj;
+                    } else {
+                        this.InData.push(obj);
+                    }
+                    this.editing = -1;
+                    this.calcPi();
+                    this.calcG();
+                    this.calculateMnyus();
+
+                    this.name = '';
+                    this.value = 0;
+                },
+
+                calcPi: function () {
+                    for (var i = 0; i < this.Table2Data.length; i++) {
+                        // p = 1
+
+                        var result = 0;
+                        for (var j = 0; j < this.InData.length; j++) {
+
+
+                            for (var x = 0; x < this.InData[j].B.length; x++) {
+                                // p 1 
+
+                                if (this.InData[j].B[x].i == j + 1 && this.InData[j].B[x].j == i + 1) {
+                                    if (x % 2 == 0) {
+                                        result += this.calcTrapezoidOne(this.InData[j].value, this.InData[j].B[x].values);
+                                    } else {
+                                        result += this.calcTrapezoidTwo(this.InData[j].value, this.InData[j].B[x].values);
+                                    }
+                                }
+                            }
+                        }
+
+                        this.Table2Data[i].p = (1 / 6) * result;
+                        this.Table2Data[i].G = this.Table2Data[i].p * this.Table2Data[i].g;
+                    }
+                },
+                calcG: function () {
+                    this.G = 0;
+                    for (var i = 0; i < this.Table2Data.length; i++) {
+                        this.G += this.Table2Data[i].G;
+                    }
+                },
+                calculateMnyus:function(){
+                    this.resultData = [];
+                    
+                    for (var i = 0; i < this.Table2Data.length; i++) {
+                        if(this.Table2Data[i].p >= this.Table2Data[i].term[0] && this.Table2Data[i].p <= this.Table2Data[i].term[1]){
+                            var obj = {};
+                            obj.index = i+1;
+                            obj.name = this.calcMnyu[i].name;
+                            obj.mnyu = this.calcMnyu[i].Y(this.G);
+                            if(obj.mnyu >= 0)
+                            this.resultData.push(obj);
+                        }
+                    }
+
+                }
+            },
+
+
+        });
+    </script>
+</body>
+
+</html>
